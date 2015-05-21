@@ -1,0 +1,29 @@
+//
+//  TTCommon.h
+//  TTVideoHD
+//
+//  Created by xun.liu on 14-10-30.
+//  Copyright (c) 2014年 xun.liu. All rights reserved.
+//
+
+#ifndef TTVideoHD_TTCommon_h
+#define TTVideoHD_TTCommon_h
+
+//获取物理屏幕的尺寸
+#define kScreenHeight [UIScreen mainScreen].bounds.size.height
+#define kScreenWidth [UIScreen mainScreen].bounds.size.width
+
+//通过三色值获取颜色对象
+#define COLORWITHRGB(r,g,b,a) [UIColor colorWithRed:(r)/255.0 green:(g)/255.0 blue:(b)/255.0 alpha:(a)]
+
+//获取系统版本
+#define SYSTEMVERSION [[[UIDevice currentDevice] systemVersion] floatValue]
+
+//视频接口
+#define VIDEOURL_string     @"http://vf1.mtime.cn/Video/2012/04/23/mp4/120423212602431929.mp4"
+#define VIDEOURL_string2    @"http://www.jxvdy.com/file/upload/201309/18/18-10-03-19-3.mp4"
+#define VIDEOURL_string3    @"http://www.jxvdy.com/file/upload/201405/05/18-24-58-42-627.mp4"
+#define VIDEOURL_str        @"http://testpp.ttmv.com/vod/fast-1280X720.mp4"
+#define VIDEOURL_str2       @"http://testpp.ttmv.com/vod/test1.flv"
+
+#endif

@@ -1,0 +1,70 @@
+//
+//  Core.h
+//  Core
+//
+//  Created by xun.liu on 14/11/20.
+//  Copyright (c) 2014年 xun.liu. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "TTVideoView.h"
+@interface Core : NSObject
+
+
+//创建player
+void *player_create(char *url);
+
+//回调
+/**
+ *    callback（void *opaque, int result, int type）
+ *    result:回调返回值
+ *    type: 0，视频创建失败； 1，视频创建成功； 2，进度回调； 3，缓冲回调； 4，视频播放完成
+ */
+int player_register_callback(void *videoPlayer, void *callback, void *opaque);
+
+//获取视频总时间
+int player_get_duration(void *videoPlayer, double *duration);
+
+//---
+//播放
+void player_play(void *videoPlayer);
+
+//暂停
+void player_pause(void *videoPlayer);
+
+//停止
+void player_stop(void *videoPlayer);
+
+//double progress;
+//int ret;
+//ret=player_create(player,&progrees);
+//if(reg==0)
+//int x = &
+
+//控制 播放 进度
+void player_set_progress(void *videoPlayer, double progress);
+
+//捕获 某一时间点 图像
+void *player_get_captureImage(void *videoPlayer, double timePoint);
+
+//获取当前音量值
+int player_get_currentVolume(void *videoPlayer, float *volume);
+
+//控制 音量
+void player_set_volume(void *videoPlayer, float volume);
+
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+

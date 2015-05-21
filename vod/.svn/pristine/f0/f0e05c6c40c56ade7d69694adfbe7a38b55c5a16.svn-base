@@ -1,0 +1,216 @@
+//
+//  RootViewController.m
+//  vodPlayerDemo
+//
+//  Created by xun.liu on 14/12/10.
+//  Copyright (c) 2014年 xun.liu. All rights reserved.
+//
+
+#import "TTRootViewController.h"
+#import "TTRootTableViewCell.h"
+
+@interface TTRootViewController () <UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate>
+{
+    NSString *_IP_str;
+    NSMutableArray *_dataArray;
+}
+
+@property (weak, nonatomic) IBOutlet UIView *topView;
+@property (weak, nonatomic) IBOutlet UIView *bottomView;
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet UITextField *IPtextField;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activity;
+
+@end
+
+@implementation TTRootViewController
+
+- (IBAction)changeIPAction:(id)sender
+{
+    NSLog(@"更换IP");
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.navigationController.navigationBar.hidden = YES;
+    
+    self.tableView.backgroundColor =  COLORWITHRGB(244, 244, 244, 1);
+    self.tableView.hidden = YES;
+    _activity.hidden = NO;
+    [_activity startAnimating];
+    
+    _dataArray = [[NSMutableArray alloc] init];
+    
+    [self keyboardNotification];
+    [self loadData];
+}
+
+- (void)loadData
+{
+    NSURL *url = [NSURL URLWithString:@"http://testpp.ttmv.com/vod/VideoList.txt"];
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
+    [request setHTTPMethod:@"GET"];
+    NSOperationQueue *queue = [[NSOperationQueue alloc] init];
+    [NSURLConnection sendAsynchronousRequest:request queue:queue completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+        
+        NSLog(@"%@",response);
+        NSString *responseStr = [[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSISOLatin1StringEncoding];
+        NSLog(@"responseStr = %@", responseStr);
+        
+        NSDictionary *result = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
+        
+        NSLog(@"%@", result);
+        
+        //整理数组
+        NSArray *dataArr = [result objectForKey:@"data"];
+        NSMutableArray *array2D = nil;
+        for (int i=0; i<dataArr.count; i++) {
+            
+            array2D = [_dataArray lastObject];
+            if (array2D.count == 2 || array2D == nil) {
+                array2D = [NSMutableArray arrayWithCapacity:2];
+                [_dataArray addObject:array2D];
+            }
+            
+            NSString *urlstring = [dataArr objectAtIndex:i];
+            [array2D addObject:urlstring];
+        }
+        
+        
+        //回到主线程
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_tableView reloadData];
+            _tableView.hidden = NO;
+            _activity.hidden = YES;
+            [_activity stopAnimating];
+        });
+    }];
+}
+
+- (void)keyboardNotification
+{
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+}
+
+#pragma mark - keyboard notification
+- (void)keyboardWillShow:(NSNotification *)notification
+{
+    UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapAnyWhere:)];
+    float animationDuration = [[[notification userInfo] valueForKey:UIKeyboardAnimationDurationUserInfoKey] floatValue];
+    CGFloat keyboardHeight = [[[notification userInfo] objectForKey:UIKeyboardBoundsUserInfoKey] CGRectValue].size.height;
+    
+    [UIView animateWithDuration:animationDuration
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^{
+                         
+                         NSLog(@"SYSTEMVERSION == %f",SYSTEMVERSION);
+                         if (SYSTEMVERSION >= 7.0) {
+                             CGRect bottomFrame = self.bottomView.frame;
+                             bottomFrame.origin.y = self.view.bounds.size.height - keyboardHeight - bottomFrame.size.height;
+                             self.bottomView.frame = bottomFrame;
+                         }
+                         else {
+
+                         }
+                         
+                         
+                         
+                     } completion:^(BOOL finished) {
+
+                         
+                     }];
+    
+    [self.tableView addGestureRecognizer:tapRecognizer];
+
+}
+
+- (void)keyboardWillHide:(NSNotification *)notification
+{
+    UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapAnyWhere:)];
+    float animationDuration = [[[notification userInfo] valueForKey:UIKeyboardAnimationDurationUserInfoKey] floatValue];
+    
+    
+    [UIView beginAnimations:nil context:nil];
+    [UIView setAnimationDuration:animationDuration];
+    [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+    
+    if (SYSTEMVERSION >= 7.0) {
+        CGRect bottomFrame = self.bottomView.frame;
+        bottomFrame.origin.y = self.view.bounds.size.height - bottomFrame.size.height;
+        self.bottomView.frame = bottomFrame;
+    }
+    else {
+
+    }
+    
+    [UIView commitAnimations];
+    
+    [self.tableView removeGestureRecognizer:tapRecognizer];
+}
+
+- (void)didTapAnyWhere:(UITapGestureRecognizer *)recognizer
+{
+    [self.IPtextField resignFirstResponder];
+}
+
+#pragma mark - UITableView dataSource / delegate
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return _dataArray.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *homeIdentify = @"homeCell";
+    TTRootTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:homeIdentify];
+    if (!cell) {
+        cell = [[TTRootTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:homeIdentify];
+    }
+    
+    cell.data = [_dataArray objectAtIndex:indexPath.row];
+    
+    return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 157;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITextfield delegate
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    
+}
+
+- (void)textFieldDidEndEditing:(UITextField *)textField
+{
+    
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [self didTapAnyWhere:nil];
+    return YES;
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

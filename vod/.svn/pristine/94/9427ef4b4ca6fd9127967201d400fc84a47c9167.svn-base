@@ -1,0 +1,51 @@
+//
+//  TTProgressSlider.h
+//  PlayerUI
+//
+//  Created by xun.liu on 14/12/1.
+//  Copyright (c) 2014年 xun.liu. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+@protocol TTProgressSliderDelegate;
+
+@interface TTProgressSlider : UIView
+{
+    float _value;
+    float _progress;
+    float _height;
+    
+    UIColor *_minimumTrackTintColor;
+    UIColor *_maximumTrackTintColor;
+    UIColor *_thumbTintColor;
+    UIColor *_progressTintColor;
+    
+    UIImage *_minimumTrackImage;
+    UIImage *_maximumTrackImage;
+    UIImage *_thumbImage;
+    UIImage *_progressImage;
+}
+
+@property(nonatomic,assign) float value;             //滑块位置
+@property(nonatomic,assign) float progress;          //缓冲进度位置
+@property(nonatomic,assign) float height;            //进度条高
+
+@property(nonatomic,strong) UIColor *minimumTrackTintColor; //播放进度
+@property(nonatomic,strong) UIColor *maximumTrackTintColor; //背景底色
+@property(nonatomic,strong) UIColor *thumbTintColor;        //point
+@property(nonatomic,strong) UIColor *progressTintColor;     //缓冲进度
+
+@property(nonatomic,strong) UIImage *minimumTrackImage;     //播放进度
+@property(nonatomic,strong) UIImage *maximumTrackImage;     //背景底色
+@property(nonatomic,strong) UIImage *thumbImage;            //point
+@property(nonatomic,strong) UIImage *progressImage;         //缓冲进度
+
+@property (nonatomic,assign) id<TTProgressSliderDelegate> delegate;
+@end
+
+@protocol TTProgressSliderDelegate <NSObject>
+
+- (void)progressSliderDidStart:(TTProgressSlider *)progressSlider value:(float)vlaue;
+- (void)progressSliderDidMoveEnd:(TTProgressSlider *)progressSlider value:(float)vlaue;
+
+@end

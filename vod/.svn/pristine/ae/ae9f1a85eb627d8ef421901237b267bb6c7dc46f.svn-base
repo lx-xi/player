@@ -1,0 +1,278 @@
+//
+//  TTProgressSlider.m
+//  PlayerUI
+//
+//  Created by xun.liu on 14/12/1.
+//  Copyright (c) 2014年 xun.liu. All rights reserved.
+//
+
+#import "TTProgressSlider.h"
+
+#define TTSliderThumbSize (16)
+
+@interface TTProgressSlider ()
+{
+    UIImageView *_maxImageView;
+    UIImageView *_minImageView;
+    UIImageView *_thumbImageView;
+    UIImageView *_progressImageView;
+    
+    CGFloat     _pWidth;
+    CGFloat     _thumbSize;
+}
+@end
+
+@implementation TTProgressSlider
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        
+        _thumbSize = TTSliderThumbSize;
+        self.height = 4;
+        [self setupViews];
+        
+//        self.maximumTrackTintColor =
+//        self.progressTintColor =
+        self.minimumTrackTintColor = [UIColor colorWithRed:245 green:130 blue:31 alpha:1];
+//        self.thumbTintColor =
+        
+        [self addPanGesture];
+    
+    }
+    
+    return self;
+}
+
+- (void)addPanGesture
+{
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(thumbSwipe:)];
+    [_thumbImageView addGestureRecognizer:pan];
+    _thumbImageView.userInteractionEnabled = YES;
+}
+
+- (void)setupViews
+{
+    _maxImageView = [[UIImageView alloc] initWithFrame:self.bounds];
+    _maxImageView.backgroundColor = [UIColor colorWithRed:51 green:51 blue:51 alpha:1];
+    [self addSubview:_maxImageView];
+    _progressImageView = [[UIImageView alloc] init];
+    [self addSubview:_progressImageView];
+    _minImageView = [[UIImageView alloc] init];
+    [self addSubview:_minImageView];
+    _thumbImageView = [[UIImageView alloc] init];
+    [self addSubview:_thumbImageView];
+    
+    [self setupFrame];
+}
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+    [self setupFrame];
+}
+
+- (void)setupFrame
+{
+    _pWidth = self.frame.size.width - _thumbSize;
+    
+    CGFloat x = _thumbSize / 2;
+    CGFloat y = self.frame.size.height/2 - self.height/2;
+    
+    _maxImageView.frame = CGRectMake(x, y, self.frame.size.width - _thumbSize, self.height);
+    _progressImageView.frame = CGRectMake(x, y, _progress*_pWidth, self.height);
+    _minImageView.frame = CGRectMake(x, y, _value*_pWidth, self.height);
+    
+    _thumbImageView.bounds = CGRectMake(0, 0, _thumbSize, _thumbSize);
+    _thumbImageView.center = CGPointMake((_value*_pWidth) + (_thumbSize/2), self.frame.size.height/2);
+}
+
+- (void)thumbSwipe:(UIPanGestureRecognizer *)pan
+{
+    if ([pan state] == UIGestureRecognizerStateBegan) {
+        if (_delegate && [_delegate respondsToSelector:@selector(progressSliderDidStart:value:)]) {
+            [_delegate progressSliderDidStart:self value:_value];
+        }
+    }
+    
+    if ([pan state] == UIGestureRecognizerStateChanged) {
+        CGPoint curPoint = [pan locationInView:self];
+        if (curPoint.x < TTSliderThumbSize/2 || curPoint.x > _pWidth+TTSliderThumbSize/2) {
+            return;
+        }
+        
+        _thumbImageView.center = CGPointMake(curPoint.x, _thumbImageView.center.y);
+        _minImageView.frame = CGRectMake(_minImageView.frame.origin.x, _minImageView.frame.origin.y, _thumbImageView.center.x, _minImageView.frame.size.height);
+        _value = [self transformXToValue:_thumbImageView.center.x];
+    }
+    
+    if ([pan state] == UIGestureRecognizerStateEnded) {
+        if (_thumbImageView.center.x <= TTSliderThumbSize/2) {
+            _value = 0.0f;
+            _thumbImageView.center = CGPointMake(TTSliderThumbSize/2, _thumbImageView.center.y);
+        }
+        else if (_thumbImageView.center.x >= _pWidth+TTSliderThumbSize/2) {
+            _value = 1.0f;
+            _thumbImageView.center = CGPointMake(_pWidth+TTSliderThumbSize/2, _thumbImageView.center.y);
+        }
+        
+        if (_delegate && [_delegate respondsToSelector:@selector(progressSliderDidMoveEnd:value:)]) {
+            [_delegate progressSliderDidMoveEnd:self value:_value];
+        }
+    }
+}
+
+#pragma mark - 
+#pragma mark   set color
+- (void)setMaximumTrackTintColor:(UIColor *)maximumTrackTintColor
+{
+    if (_maximumTrackTintColor != maximumTrackTintColor) {
+        
+        _maximumTrackTintColor = maximumTrackTintColor;
+        
+        _maxImageView.backgroundColor = _maximumTrackTintColor;
+    }
+}
+
+- (void)setMinimumTrackTintColor:(UIColor *)minimumTrackTintColor
+{
+    if (_minimumTrackTintColor != minimumTrackTintColor) {
+        
+        _minimumTrackTintColor = minimumTrackTintColor;
+        
+        _minImageView.backgroundColor = _minimumTrackTintColor;
+    }
+}
+
+- (void)setProgressTintColor:(UIColor *)progressTintColor
+{
+    if (_progressTintColor != progressTintColor) {
+        
+        _progressTintColor = progressTintColor;
+        
+        _progressImageView.backgroundColor = _progressTintColor;
+    }
+}
+
+- (void)setThumbTintColor:(UIColor *)thumbTintColor
+{
+    if (_thumbTintColor != thumbTintColor) {
+        
+        _thumbTintColor = thumbTintColor;
+        
+        _thumbImageView.image = [self drawDefImage:_thumbImageView.frame.size color:thumbTintColor];
+    }
+}
+
+#pragma mark - 
+#pragma mark set value
+- (void)setProgress:(float)progress
+{
+    if (_progress != progress) {
+        
+        _progress = progress;
+        
+        _progressImageView.frame = CGRectMake(_progressImageView.frame.origin.x, _progressImageView.frame.origin.y, [self transformValueToX:progress], _progressImageView.frame.size.height);
+    }
+}
+
+- (void)setValue:(float)value
+{
+    if (_value != value) {
+    
+        _value = value;
+        float x = [self transformValueToX:value];
+        _minImageView.frame = CGRectMake(_minImageView.frame.origin.x, _minImageView.frame.origin.y, x, _minImageView.frame.size.height);
+        _thumbImageView.center = CGPointMake(x, _thumbImageView.center.y);
+    }
+}
+
+- (void)setHeight:(float)height
+{
+    if (_height != height) {
+        
+        _height = height;
+        [self setupFrame];
+    }
+}
+
+#pragma mark - 
+#pragma mark set image
+- (void)setThumbImage:(UIImage *)thumbImage
+{
+    if (_thumbImage != thumbImage) {
+        
+        _thumbImage = thumbImage;
+        
+        _thumbSize = thumbImage.size.width;
+        _thumbImageView.image = _thumbImage;
+        
+        [self setupFrame];
+    }
+}
+
+- (void)setMaximumTrackImage:(UIImage *)maximumTrackImage
+{
+    if (_maximumTrackImage != maximumTrackImage) {
+        
+        _maximumTrackImage = maximumTrackImage;
+        
+        _maxImageView.image = _maximumTrackImage;
+//        _maxImageView.contentMode = UIViewContentModeScaleAspectFit;
+    }
+}
+
+- (void)setProgressImage:(UIImage *)progressImage
+{
+    if (_progressImage != progressImage) {
+        
+        _progressImage = progressImage;
+        
+        _progressImageView.image = _progressImage;
+    }
+}
+
+- (void)setMinimumTrackImage:(UIImage *)minimumTrackImage
+{
+    if (_minimumTrackImage != minimumTrackImage) {
+        
+        _minimumTrackImage = minimumTrackImage;
+        
+        _minImageView.image = _minimumTrackImage;
+    }
+}
+
+
+#pragma mark - 
+#pragma mark - other method
+- (CGFloat)transformValueToX:(float)x
+{
+    return (_pWidth * x) + TTSliderThumbSize/2;
+}
+
+- (float)transformXToValue:(CGFloat)x
+{
+    return (x - TTSliderThumbSize/2) / _pWidth;
+}
+
+- (UIImage *)drawDefImage:(CGSize)size color:(UIColor *)color
+{
+    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+    UIBezierPath *p = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, 0, size.width, size.height) cornerRadius:size.width/2];
+    [color setFill];
+    [p fill];
+    UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return img;
+}
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end
