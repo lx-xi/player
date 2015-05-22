@@ -4,7 +4,7 @@
 //
 //  Created by xun.liu on 14/12/12.
 //  Copyright (c) 2014年 xun.liu. All rights reserved.
-//
+//  lx_xi163@163.com
 
 #import "TTSlider.h"
 #import <objc/message.h>

@@ -4,7 +4,7 @@
 //
 //  Created by xun.liu on 15/3/31.
 //  Copyright (c) 2015年 xun.liu. All rights reserved.
-//
+//  lx_xi163@163.com
 
 /*
  方法1、可以设置显示隐藏文件，然后在Finder下直接打开。设置查看隐藏文件的方法如下：打开终端，输入命名
