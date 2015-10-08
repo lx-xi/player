@@ -12,7 +12,6 @@
 
 @interface TTHomeViewController ()<PlayerUIDelegate>
 {
-//    PlayerUI *_player;
     BOOL _isFirst;
 }
 
